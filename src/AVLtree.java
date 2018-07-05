@@ -1,8 +1,6 @@
 /*
  * 
  */
-
-
 import java.util.Stack;
 
 
@@ -224,7 +222,8 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
         AVLnode<AnyType> nodeOnPath;
         while (!thePath.isEmpty()) {
             nodeOnPath = thePath.pop();
-            if (nodeOnPath != null) {
+            if (nodeOnPath != null) {   // null if this node is the replacement, 
+                                        // and deleted node was leaf, making replacement null
                 nodeOnPath.updateHeight();
                 if (!nodeOnPath.isBalanced()) {
                     nodeOnPath.myHeight--;
@@ -268,11 +267,11 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
         
         private AVLnode<Type> myRightChild;
         
-        AVLnode (final Type theData) {
+        private AVLnode (final Type theData) {
             this(theData, null, null, 0);
         }
         
-        AVLnode (final Type theData, final AVLnode<Type> theLeft, final AVLnode<Type> theRight, final int theHeight) {
+        private AVLnode (final Type theData, final AVLnode<Type> theLeft, final AVLnode<Type> theRight, final int theHeight) {
             myData = theData;
             myLeftChild = theLeft;
             myRightChild = theRight;
