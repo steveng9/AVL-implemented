@@ -1,6 +1,8 @@
 /*
  * 
  */
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 
 
@@ -71,22 +73,23 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
         while (!thePath.isEmpty()) {
             thisNode = thePath.pop();
             minimumCorrectHeight++;
+            if (thisNode.myHeight < minimumCorrectHeight) thisNode.updateHeight();
+            else break; // all above heights need not changing
             if (!thisNode.isBalanced()) {
+                thisNode.myHeight--;
                 performRotation(thisNode, thePath);
                 break; // all above nodes need not changing
             }
-            if (thisNode.myHeight < minimumCorrectHeight) thisNode.updateHeight();
-            else break; // all above heights need not changing
         }
     }
 
     private void performRotation(final AVLnode<AnyType> theImbalancedNode, final Stack<AVLnode<AnyType>> thePath) {
         AVLnode<AnyType> parent = thePath.isEmpty() ? null : thePath.peek();
         if (theImbalancedNode.isLeftChildTaller()) {
-            if (theImbalancedNode.myLeftChild.isLeftChildTaller()) {
-                rotateWithLeftChild(theImbalancedNode, parent);
-            } else { 
+            if (theImbalancedNode.myLeftChild.isRightChildTaller()) {
                 rotateLeftRightImbalance(theImbalancedNode, parent);
+            } else { 
+                rotateWithLeftChild(theImbalancedNode, parent);
             }
         } else {
             if (theImbalancedNode.myRightChild.isLeftChildTaller()) {
@@ -101,28 +104,28 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
         AVLnode<AnyType> rightChild = theNode.myRightChild;
         theNode.myRightChild = rightChild.myLeftChild;
         rightChild.myLeftChild = theNode;
-        rightChild.myLeftChild.myHeight--;
+        rightChild.myLeftChild.updateHeight();
+        rightChild.updateHeight();
         attachRotatedUpNode(theNode, rightChild, theParent);
     }
     
     private void rotateLeftRightImbalance(final AVLnode<AnyType> theNode, final AVLnode<AnyType> theParent) {
         rotateWithRightChild(theNode.myLeftChild, theNode);
         rotateWithLeftChild(theNode, theParent);
-        theNode.myLeftChild.myHeight++;
     }
     
     private void rotateWithLeftChild(final AVLnode<AnyType> theNode, final AVLnode<AnyType> theParent) {
         AVLnode<AnyType> leftChild = theNode.myLeftChild;
         theNode.myLeftChild = leftChild.myRightChild;
         leftChild.myRightChild = theNode;
-        leftChild.myRightChild.myHeight--;
+        leftChild.myRightChild.updateHeight();
+        leftChild.updateHeight();
         attachRotatedUpNode(theNode, leftChild, theParent);
     }
     
     private void rotateRightLeftImbalance(final AVLnode<AnyType> theNode, final AVLnode<AnyType> theParent) {
         rotateWithLeftChild(theNode.myRightChild, theNode);
         rotateWithRightChild(theNode, theParent);
-        theNode.myRightChild.myHeight++;
     }
     
     private void attachRotatedUpNode(final AVLnode<AnyType> theOriginalImbalancedNode, 
@@ -226,7 +229,6 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
                                         // and deleted node was leaf, making replacement null
                 nodeOnPath.updateHeight();
                 if (!nodeOnPath.isBalanced()) {
-                    nodeOnPath.myHeight--;
                     performRotation(nodeOnPath, thePath);
                 }
             }
@@ -293,6 +295,10 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
             return myRightChild.myHeight;
         }
         
+        private boolean isRightChildTaller() {
+            return getLeftChildHeight() < getRightChildHeight();
+        }
+        
         private boolean isLeftChildTaller() {
             return getLeftChildHeight() > getRightChildHeight();
         }
@@ -310,6 +316,34 @@ public class AVLtree<AnyType extends Comparable<AnyType>> {
         @Override
         public String toString() {
             return myData + " " + myHeight + "\n";
+        }
+    }
+    
+    public boolean isBalanced() {
+        return checkHeight(myRoot) != Integer.MIN_VALUE;
+    }
+
+    private int checkHeight(AVLnode<AnyType> node) { // for testing purposes only
+        if (node == null) {
+            return -1;
+        }
+        int leftHeight = checkHeight(node.myLeftChild);
+        if (leftHeight == Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        }
+        int rightHeight = checkHeight(node.myRightChild);
+        if (rightHeight == Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        }
+        int balance = Math.abs(leftHeight - rightHeight);
+        if (balance > 1) {
+            return Integer.MIN_VALUE;
+        } 
+        int height = Math.max(leftHeight, rightHeight) + 1;
+        if (height != node.myHeight) {
+            return Integer.MIN_VALUE;
+        } else {
+            return height;
         }
     }
 }
